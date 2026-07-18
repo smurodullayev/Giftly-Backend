@@ -115,6 +115,8 @@ class ProductReadSerializer(serializers.ModelSerializer):
         max_digits=12, decimal_places=2, read_only=True
     )
     is_in_stock = serializers.BooleanField(read_only=True)
+    avg_rating = serializers.FloatField(read_only=True, default=None)
+    review_count = serializers.IntegerField(read_only=True, default=0)
 
     class Meta:
         model = Product
@@ -126,6 +128,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
             "sku", "stock", "min_order_qty", "is_in_stock",
             "weight_grams",
             "images",
+            "avg_rating", "review_count",
             "is_active", "created_at", "updated_at",
         ]
         read_only_fields = fields

@@ -1,3 +1,4 @@
+from django.db.models import Avg, Count
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -107,6 +108,7 @@ class ProductViewSet(viewsets.ModelViewSet):
             Product.objects
             .select_related("business")
             .prefetch_related("categories", "categories__parent", "occasions", "tags")
+            .annotate(avg_rating=Avg("reviews__rating"), review_count=Count("reviews"))
         )
         user = self.request.user
         # Autentifikatsiyasiz yoki oddiy user — faqat aktiv mahsulotlar

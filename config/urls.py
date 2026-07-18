@@ -23,6 +23,7 @@ v1_patterns = [
     path("media/", include("apps.media.urls")),
     path("catalog/", include("apps.catalog.urls")),
     path("leads/", include("apps.leads.urls")),
+    path("reviews/", include("apps.reviews.urls")),
 ]
 
 urlpatterns = [

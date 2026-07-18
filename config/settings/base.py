@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     "apps.media",
     "apps.catalog",
     "apps.leads",
+    "apps.reviews",
 ]
 
 MIDDLEWARE = [
