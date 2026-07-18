@@ -3,11 +3,88 @@ from rest_framework import serializers
 from .models import Category, Occasion, Product, Tag
 
 
-class CategorySerializer(serializers.ModelSerializer):
+# ------------------------------------------------------------------
+# Category
+# ------------------------------------------------------------------
+
+class CategoryChildSerializer(serializers.ModelSerializer):
+    """3-daraja uchun — farzandning farzandi (eng chuqur daraja)."""
+
+    icon_url = serializers.SerializerMethodField()
+
     class Meta:
         model = Category
-        fields = ["id", "name"]
+        fields = ["id", "name", "slug", "icon_url"]
 
+    def get_icon_url(self, obj) -> str | None:
+        request = self.context.get("request")
+        if obj.icon and request:
+            return request.build_absolute_uri(obj.icon.url)
+        return None
+
+
+class CategorySubSerializer(serializers.ModelSerializer):
+    """2-daraja — farzand kategoriyalar, o'zining farzandlari bilan."""
+
+    children = CategoryChildSerializer(many=True, read_only=True)
+    icon_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "icon_url", "children"]
+
+    def get_icon_url(self, obj) -> str | None:
+        request = self.context.get("request")
+        if obj.icon and request:
+            return request.build_absolute_uri(obj.icon.url)
+        return None
+
+
+class CategoryTreeSerializer(serializers.ModelSerializer):
+    """
+    1-daraja (root) kategoriyalar + ularning farzandlari (2 va 3-daraja).
+    Faqat o'qish uchun. GET /api/v1/catalog/categories/?tree=true
+    """
+
+    children = CategorySubSerializer(many=True, read_only=True)
+    icon_url = serializers.SerializerMethodField()
+    level = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "icon_url", "level", "children"]
+
+    def get_icon_url(self, obj) -> str | None:
+        request = self.context.get("request")
+        if obj.icon and request:
+            return request.build_absolute_uri(obj.icon.url)
+        return None
+
+
+class CategorySerializer(serializers.ModelSerializer):
+    """
+    Tekis (flat) kategoriya serializer — ro'yxat va yozish uchun.
+    parent_id bilan yangi kategoriya yaratish mumkin.
+    """
+
+    icon_url = serializers.SerializerMethodField()
+    parent_name = serializers.CharField(source="parent.name", read_only=True)
+
+    class Meta:
+        model = Category
+        fields = ["id", "name", "slug", "parent", "parent_name", "icon_url"]
+        read_only_fields = ["slug"]
+
+    def get_icon_url(self, obj) -> str | None:
+        request = self.context.get("request")
+        if obj.icon and request:
+            return request.build_absolute_uri(obj.icon.url)
+        return None
+
+
+# ------------------------------------------------------------------
+# Occasion / Tag
+# ------------------------------------------------------------------
 
 class OccasionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -21,15 +98,15 @@ class TagSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug"]
 
 
-class ProductImageSerializer(serializers.SerializerMethodField):
-    """Mahsulot rasmlari — MediaFile dan olinadi."""
-    pass
-
+# ------------------------------------------------------------------
+# Product
+# ------------------------------------------------------------------
 
 class ProductReadSerializer(serializers.ModelSerializer):
     """GET so'rovlari uchun — nested ma'lumotlar va rasmlar."""
 
-    category = CategorySerializer(read_only=True)
+    # Kategoriyalar to'liq nested — farzand → ota zanjiri bilan
+    categories = CategorySerializer(many=True, read_only=True)
     occasions = OccasionSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     business_username = serializers.CharField(source="business.username", read_only=True)
@@ -45,7 +122,7 @@ class ProductReadSerializer(serializers.ModelSerializer):
             "id", "slug", "business", "business_username",
             "title", "description",
             "price", "sale_price", "effective_price",
-            "category", "occasions", "tags",
+            "categories", "occasions", "tags",
             "sku", "stock", "min_order_qty", "is_in_stock",
             "weight_grams",
             "images",
@@ -64,20 +141,18 @@ class ProductReadSerializer(serializers.ModelSerializer):
             .filter(content_type=ct, object_id=obj.pk, purpose="product_image")
             .order_by("order", "-is_primary", "created_at")
         )
-        return MediaFileSerializer(
-            images, many=True, context=self.context
-        ).data
+        return MediaFileSerializer(images, many=True, context=self.context).data
 
 
 class ProductWriteSerializer(serializers.ModelSerializer):
-    """POST / PATCH so'rovlari uchun — business token dan avtomatik o'rnatiladi."""
+    """POST / PATCH so'rovlari uchun."""
 
     class Meta:
         model = Product
         fields = [
             "title", "description",
             "price", "sale_price",
-            "category", "occasions", "tags",
+            "categories", "occasions", "tags",
             "sku", "stock", "min_order_qty",
             "weight_grams",
             "is_active",
