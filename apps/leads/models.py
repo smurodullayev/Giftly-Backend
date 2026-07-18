@@ -1,10 +1,12 @@
 from django.db import models
-from apps.users.models import User
+
 from apps.catalog.models import Product
+from apps.users.models import User
 
 
 class Lead(models.Model):
-    """MVP: foydalanuvchi tanlangan mahsulot bo'yicha so'rov yuboradi."""
+    """Foydalanuvchi tanlangan mahsulot bo'yicha so'rov yuboradi."""
+
     class Status(models.TextChoices):
         NEW = "new", "Yangi"
         CONTACTED = "contacted", "Bog'lanildi"
@@ -13,15 +15,27 @@ class Lead(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="leads")
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="leads")
     message = models.TextField(blank=True)
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.NEW)
-    created_at = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.NEW,
+        db_index=True,
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Lead #{self.id} — {self.product.title}"
+    class Meta:
+        verbose_name = "Lead"
+        verbose_name_plural = "Leadlar"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Lead #{self.pk} — {self.product.title}"
 
 
 class Order(models.Model):
-    """Keyingi bosqich: to'lov va kuryer moduli bilan bog'lanadi."""
+    """To'lov va kuryer moduli bilan bog'lanadi."""
+
     class Status(models.TextChoices):
         PENDING = "pending", "Kutilmoqda"
         PAID = "paid", "To'landi"
@@ -31,11 +45,26 @@ class Order(models.Model):
 
     lead = models.OneToOneField(Lead, on_delete=models.CASCADE, related_name="order")
     courier = models.ForeignKey(
-        User, on_delete=models.SET_NULL, null=True, blank=True,
-        related_name="deliveries", limit_choices_to={"role": "courier"}
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="deliveries",
+        limit_choices_to={"role": User.Role.COURIER},
     )
-    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+    )
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Order #{self.id} ({self.status})"
+    class Meta:
+        verbose_name = "Buyurtma"
+        verbose_name_plural = "Buyurtmalar"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Order #{self.pk} ({self.get_status_display()})"

@@ -1,0 +1,1 @@
+- [Giftly project conventions](giftly-conventions.md) — Django REST, JWT auth, role-based permissions, Uzbek comments in code

@@ -1,5 +1,6 @@
-from .base import *  # noqa: F401,F403
-from decouple import config, Csv
+from decouple import Csv, config
+
+from .base import *  # noqa: F401, F403
 
 DEBUG = True
 
@@ -11,9 +12,18 @@ DATABASES = {
         "NAME": config("POSTGRES_DB", default="giftly"),
         "USER": config("POSTGRES_USER", default="giftly"),
         "PASSWORD": config("POSTGRES_PASSWORD", default="giftly"),
-        "HOST": config("POSTGRES_HOST", default="db"),  # docker-compose service nomi
+        "HOST": config("POSTGRES_HOST", default="db"),
         "PORT": config("POSTGRES_PORT", default="5432"),
+        "CONN_MAX_AGE": 60,
     }
 }
 
-INSTALLED_APPS += ["rest_framework.authtoken"]  # noqa: F405
+# Dev muhitda CORS — frontend dev server
+CORS_ALLOWED_ORIGINS = config(
+    "CORS_ALLOWED_ORIGINS",
+    default="http://localhost:3000,http://127.0.0.1:3000",
+    cast=Csv(),
+)
+
+# Dev da email konsolga chiqadi
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
