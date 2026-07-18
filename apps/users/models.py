@@ -95,6 +95,22 @@ class BusinessProfile(models.Model):
         verbose_name="Telegram",
         help_text="@ belgisisiz",
     )
+    # Brend rasmlari — to'g'ridan-to'g'ri model da saqlanadi
+    logo = models.ImageField(
+        upload_to="business/logos/",
+        null=True,
+        blank=True,
+        verbose_name="Logo (ikonka / belgi)",
+        help_text="Kvadrat, fon yo'q PNG tavsiya etiladi. Masalan: 512×512 px",
+    )
+    logotype = models.ImageField(
+        upload_to="business/logotypes/",
+        null=True,
+        blank=True,
+        verbose_name="Logotip (matnli logo)",
+        help_text="Kompaniya nomi yozilgan to'liq logo. Masalan: 1200×400 px",
+    )
+
     subscription_plan = models.CharField(
         max_length=20,
         choices=SubscriptionPlan.choices,
