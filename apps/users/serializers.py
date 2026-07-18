@@ -9,15 +9,35 @@ from .models import BusinessProfile, CourierProfile, User
 # ---------------------------------------------------------------------------
 
 class UserSerializer(serializers.ModelSerializer):
-    """O'qish uchun — parol ko'rsatilmaydi."""
+    """O'qish uchun — parol va maxfiy ma'lumotlar ko'rsatilmaydi."""
+
+    avatar_url = serializers.SerializerMethodField()
 
     class Meta:
         model = User
         fields = [
             "id", "username", "email", "first_name", "last_name",
-            "role", "phone", "date_joined", "updated_at",
+            "role", "phone", "birth_date", "address", "telegram",
+            "bio", "is_verified", "avatar_url",
+            "date_joined", "updated_at",
         ]
-        read_only_fields = ["id", "date_joined", "updated_at"]
+        read_only_fields = ["id", "is_verified", "date_joined", "updated_at", "avatar_url"]
+
+    def get_avatar_url(self, obj) -> str | None:
+        """Foydalanuvchining asosiy avatarini MediaFile dan olish."""
+        from django.contrib.contenttypes.models import ContentType
+        from apps.media.models import MediaFile
+        ct = ContentType.objects.get_for_model(obj)
+        media = (
+            MediaFile.objects
+            .filter(content_type=ct, object_id=obj.pk, purpose="user_avatar")
+            .order_by("-is_primary", "order")
+            .first()
+        )
+        if not media:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(media.file.url) if request else media.url
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -32,7 +52,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "username", "email", "first_name", "last_name",
-            "role", "phone", "password", "password_confirm",
+            "role", "phone", "birth_date", "address", "telegram",
+            "password", "password_confirm",
         ]
 
     def validate(self, attrs):
@@ -40,8 +61,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {"password_confirm": "Parollar mos kelmadi."}
             )
-        role = attrs.get("role", User.Role.USER)
-        if role == User.Role.ADMIN:
+        if attrs.get("role") == User.Role.ADMIN:
             raise serializers.ValidationError(
                 {"role": "Admin rolini ro'yxatdan o'tish orqali olish mumkin emas."}
             )
@@ -58,8 +78,7 @@ class ChangePasswordSerializer(serializers.Serializer):
     )
 
     def validate_old_password(self, value):
-        user = self.context["request"].user
-        if not user.check_password(value):
+        if not self.context["request"].user.check_password(value):
             raise serializers.ValidationError("Eski parol noto'g'ri.")
         return value
 
@@ -75,20 +94,31 @@ class ChangePasswordSerializer(serializers.Serializer):
 # ---------------------------------------------------------------------------
 
 class BusinessProfileSerializer(serializers.ModelSerializer):
+    logo_url = serializers.SerializerMethodField()
+
     class Meta:
         model = BusinessProfile
         fields = [
             "id", "user", "company_name", "description",
-            "subscription_plan", "updated_at",
+            "phone", "address", "website", "instagram_url", "telegram_username",
+            "subscription_plan", "is_verified", "logo_url", "updated_at",
         ]
-        read_only_fields = ["id", "user", "updated_at"]
+        read_only_fields = ["id", "user", "is_verified", "logo_url", "updated_at"]
 
-    def validate_user(self, value):
-        if value.role != User.Role.BUSINESS:
-            raise serializers.ValidationError(
-                "Faqat 'business' rolidagi foydalanuvchi profil yarata oladi."
-            )
-        return value
+    def get_logo_url(self, obj) -> str | None:
+        from django.contrib.contenttypes.models import ContentType
+        from apps.media.models import MediaFile
+        ct = ContentType.objects.get_for_model(obj)
+        media = (
+            MediaFile.objects
+            .filter(content_type=ct, object_id=obj.pk, purpose="business_logo")
+            .order_by("-is_primary", "order")
+            .first()
+        )
+        if not media:
+            return None
+        request = self.context.get("request")
+        return request.build_absolute_uri(media.file.url) if request else media.url
 
     def create(self, validated_data):
         validated_data["user"] = self.context["request"].user

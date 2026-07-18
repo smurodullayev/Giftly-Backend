@@ -9,7 +9,7 @@ from decouple import Csv, config
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
-# Xavfsizlik: SECRET_KEY hech qachon default qiymatga ega bo'lmasligi kerak
+# Xavfsizlik: SECRET_KEY hech qachon default qiymatga ega bo'lmasin
 SECRET_KEY = config("SECRET_KEY")
 
 INSTALLED_APPS = [
@@ -28,13 +28,14 @@ INSTALLED_APPS = [
     "drf_spectacular",
     # local apps
     "apps.users",
+    "apps.media",
     "apps.catalog",
     "apps.leads",
 ]
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
-    "corsheaders.middleware.CorsMiddleware",          # CORS: CommonMiddleware'dan oldin
+    "corsheaders.middleware.CorsMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -81,11 +82,21 @@ USE_TZ = True
 STATIC_URL = "static/"
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
+# ------------------------------------------------------------------
+# Media fayllar
+# ------------------------------------------------------------------
+MEDIA_URL = "/media/"
+MEDIA_ROOT = BASE_DIR / "mediafiles"
+
+# Ruxsat etilgan rasm kengaytmalari (MediaFile validatsiyasi uchun)
+ALLOWED_IMAGE_EXTENSIONS = [".jpg", ".jpeg", ".png", ".webp", ".gif"]
+MAX_UPLOAD_SIZE_MB = 10  # MB
+
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # Django REST Framework
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework_simplejwt.authentication.JWTAuthentication",
@@ -101,7 +112,6 @@ REST_FRAMEWORK = {
         "rest_framework.filters.SearchFilter",
         "rest_framework.filters.OrderingFilter",
     ],
-    # Throttling — DDoS va brute-force himoyasi
     "DEFAULT_THROTTLE_CLASSES": [
         "rest_framework.throttling.AnonRateThrottle",
         "rest_framework.throttling.UserRateThrottle",
@@ -110,12 +120,11 @@ REST_FRAMEWORK = {
         "anon": "60/minute",
         "user": "300/minute",
     },
-    "EXCEPTION_HANDLER": "rest_framework.views.exception_handler",
 }
 
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # JWT
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=7),
@@ -128,9 +137,9 @@ SIMPLE_JWT = {
     "USER_ID_CLAIM": "user_id",
 }
 
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 # drf-spectacular (OpenAPI)
-# ---------------------------------------------------------------------------
+# ------------------------------------------------------------------
 SPECTACULAR_SETTINGS = {
     "TITLE": "Giftly API",
     "DESCRIPTION": "Giftly — marketplace + lead-generation platformasi uchun API hujjatlari",

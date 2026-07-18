@@ -14,8 +14,40 @@ class User(AbstractUser):
         choices=Role.choices,
         default=Role.USER,
         db_index=True,
+        verbose_name="Rol",
     )
-    phone = models.CharField(max_length=20, blank=True, db_index=True)
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        db_index=True,
+        verbose_name="Telefon",
+    )
+    birth_date = models.DateField(
+        null=True,
+        blank=True,
+        verbose_name="Tug'ilgan sana",
+    )
+    address = models.CharField(
+        max_length=500,
+        blank=True,
+        verbose_name="Manzil",
+    )
+    telegram = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Telegram",
+        help_text="@ belgisisiz, masalan: username",
+    )
+    bio = models.TextField(
+        blank=True,
+        verbose_name="Qisqacha ma'lumot",
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="Tasdiqlangan",
+        help_text="Telefon yoki email orqali tasdiqlangan hisob",
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
@@ -46,12 +78,33 @@ class BusinessProfile(models.Model):
         related_name="business_profile",
         limit_choices_to={"role": User.Role.BUSINESS},
     )
-    company_name = models.CharField(max_length=255)
-    description = models.TextField(blank=True)
+    company_name = models.CharField(max_length=255, verbose_name="Kompaniya nomi")
+    description = models.TextField(blank=True, verbose_name="Tavsif")
+    phone = models.CharField(
+        max_length=20,
+        blank=True,
+        verbose_name="Biznes telefon",
+        help_text="Kompaniya bog'lanish raqami",
+    )
+    address = models.CharField(max_length=500, blank=True, verbose_name="Manzil")
+    website = models.URLField(blank=True, verbose_name="Veb-sayt")
+    instagram_url = models.URLField(blank=True, verbose_name="Instagram URL")
+    telegram_username = models.CharField(
+        max_length=100,
+        blank=True,
+        verbose_name="Telegram",
+        help_text="@ belgisisiz",
+    )
     subscription_plan = models.CharField(
         max_length=20,
         choices=SubscriptionPlan.choices,
         default=SubscriptionPlan.FREE,
+        verbose_name="Tariflik reja",
+    )
+    is_verified = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name="Tasdiqlangan biznes",
     )
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -70,8 +123,17 @@ class CourierProfile(models.Model):
         related_name="courier_profile",
         limit_choices_to={"role": User.Role.COURIER},
     )
-    vehicle_type = models.CharField(max_length=50, blank=True)
-    is_available = models.BooleanField(default=True, db_index=True)
+    vehicle_type = models.CharField(
+        max_length=50,
+        blank=True,
+        verbose_name="Transport turi",
+        help_text="Masalan: velosiped, mototsikl, avtomobil",
+    )
+    is_available = models.BooleanField(
+        default=True,
+        db_index=True,
+        verbose_name="Mavjud",
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
