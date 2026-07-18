@@ -24,6 +24,9 @@ v1_patterns = [
     path("catalog/", include("apps.catalog.urls")),
     path("leads/", include("apps.leads.urls")),
     path("reviews/", include("apps.reviews.urls")),
+    path("wishlist/", include("apps.wishlist.urls")),
+    path("promos/", include("apps.promos.urls")),
+    path("delivery/", include("apps.delivery.urls")),
 ]
 
 urlpatterns = [
