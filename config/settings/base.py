@@ -22,6 +22,7 @@ INSTALLED_APPS = [
     # 3rd-party
     "rest_framework",
     "django_filters",
+    "drf_spectacular",
 
     # local apps — apps/ papkasi ostida
     "apps.users",
@@ -91,4 +92,10 @@ REST_FRAMEWORK = {
     ],
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Giftly API",
+    "DESCRIPTION": "Giftly — marketplace + lead-generation platformasi uchun API hujjatlari",
+    "VERSION": "1.0.0",
 }
