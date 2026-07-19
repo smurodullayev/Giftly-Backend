@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rest_framework import serializers
 
 from apps.catalog.models import Product
@@ -58,17 +60,17 @@ class LeadStatusSerializer(serializers.ModelSerializer):
 class OrderSerializer(serializers.ModelSerializer):
     """Buyurtma ko'rish va yaratish."""
 
-    lead_product = serializers.CharField(source="lead.product.title", read_only=True)
-    lead_user = serializers.CharField(source="lead.user.username", read_only=True)
+    lead_product     = serializers.CharField(source="lead.product.title", read_only=True)
+    lead_user        = serializers.CharField(source="lead.user.username", read_only=True)
     courier_username = serializers.CharField(source="courier.username", read_only=True)
-    total_amount = serializers.DecimalField(
-        max_digits=12, decimal_places=2, read_only=True
-    )
+    total_amount     = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = Order
         fields = [
             "id", "lead", "lead_product", "lead_user",
+            # Yetkazish turi — asosiy yangi field
+            "fulfillment_type",
             "courier", "courier_username",
             "delivery_address", "notes", "tracking_number",
             "estimated_delivery", "delivered_at",
@@ -81,7 +83,7 @@ class OrderSerializer(serializers.ModelSerializer):
             "total_amount", "created_at", "updated_at",
         ]
 
-    def validate_courier(self, value: User):
+    def validate_courier(self, value: Optional[User]):
         if value is not None and value.role != User.Role.COURIER:
             raise serializers.ValidationError(
                 "Tayinlangan foydalanuvchi 'courier' roliga ega bo'lishi kerak."
@@ -99,3 +101,27 @@ class OrderSerializer(serializers.ModelSerializer):
         if value <= 0:
             raise serializers.ValidationError("Narx 0 dan katta bo'lishi kerak.")
         return value
+
+    def validate(self, attrs):
+        fulfillment = attrs.get(
+            "fulfillment_type",
+            self.instance.fulfillment_type if self.instance else Order.FulfillmentType.DELIVERY,
+        )
+
+        if fulfillment == Order.FulfillmentType.DELIVERY:
+            # Yetkazib berish — manzil majburiy
+            address = attrs.get(
+                "delivery_address",
+                self.instance.delivery_address if self.instance else None,
+            )
+            if not address:
+                raise serializers.ValidationError(
+                    {"delivery_address": "Yetkazib berish tanlanganda manzil kiritilishi shart."}
+                )
+        else:
+            # Pickup — manzil kerak emas, delivery_fee = 0 (model.save() da ham qilinadi)
+            attrs["delivery_address"] = None
+            attrs["delivery_fee"]     = 0
+            attrs["courier"]          = None
+
+        return attrs

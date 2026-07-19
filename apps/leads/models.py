@@ -58,12 +58,16 @@ class Lead(models.Model):
 class Order(models.Model):
     """To'lov va kuryer moduli bilan bog'lanadi."""
 
+    class FulfillmentType(models.TextChoices):
+        DELIVERY = "delivery", "Yetkazib berish"
+        PICKUP   = "pickup",   "O'zim olib ketaman"
+
     class Status(models.TextChoices):
-        PENDING = "pending", "Kutilmoqda"
-        PAID = "paid", "To'landi"
-        IN_DELIVERY = "in_delivery", "Yetkazilmoqda"
-        DELIVERED = "delivered", "Yetkazildi"
-        CANCELLED = "cancelled", "Bekor qilindi"
+        PENDING     = "pending",     "Kutilmoqda"
+        PAID        = "paid",        "To'landi"
+        IN_PROGRESS = "in_progress", "Tayyorlanmoqda"
+        COMPLETED   = "completed",   "Yakunlandi"
+        CANCELLED   = "cancelled",   "Bekor qilindi"
 
     class PaymentMethod(models.TextChoices):
         CASH = "cash", "Naqd pul"
@@ -92,8 +96,20 @@ class Order(models.Model):
         verbose_name="Kuryer",
     )
 
+    fulfillment_type = models.CharField(
+        max_length=20,
+        choices=FulfillmentType.choices,
+        default=FulfillmentType.DELIVERY,
+        verbose_name="Yetkazish turi",
+    )
+
     # Yetkazish
-    delivery_address = models.TextField(verbose_name="Yetkazish manzili")
+    delivery_address = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name="Yetkazish manzili",
+        help_text="Pickup tanlanganda bo'sh qoldiriladi",
+    )
     notes = models.TextField(blank=True, verbose_name="Izoh / qo'shimcha so'rov")
     tracking_number = models.CharField(
         max_length=100,
@@ -165,6 +181,11 @@ class Order(models.Model):
         return f"Order #{self.pk} ({self.get_status_display()})"
 
     def save(self, *args, **kwargs):
+        # Pickup bo'lsa yetkazish narxi har doim nol
+        if self.fulfillment_type == self.FulfillmentType.PICKUP:
+            self.delivery_fee     = 0
+            self.delivery_address = None
+            self.courier          = None
         # total_amount har doim avtomatik hisoblanadi
         self.total_amount = self.price_snapshot + self.delivery_fee
         super().save(*args, **kwargs)
