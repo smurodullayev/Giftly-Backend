@@ -177,13 +177,9 @@ class CouponUsage(models.Model):
         verbose_name = "Kupon ishlatilishi"
         verbose_name_plural = "Kupon tarixi"
         ordering = ["-used_at"]
-        constraints = [
-            models.UniqueConstraint(
-                fields=["coupon", "user"],
-                name="unique_coupon_per_user",
-                condition=models.Q(coupon__one_per_user=True),
-            )
-        ]
+        # one_per_user tekshiruvi Coupon.is_valid() da application darajasida
+        # amalga oshiriladi. DB constraint JOIN field ishlatib bo'lmaydi (E041).
+        constraints = []
 
     def __str__(self) -> str:
         return f"{self.user.username} — {self.coupon.code} ({self.discount_applied} so'm)"
