@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,24 +14,21 @@ from .serializers import (
 )
 
 
+@extend_schema(tags=["Users"], summary="Register a new user")
 class RegisterView(generics.CreateAPIView):
-    """POST /api/v1/users/register/ — yangi foydalanuvchi."""
-
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Users"], summary="List users"),
+    retrieve=extend_schema(tags=["Users"], summary="Retrieve a user"),
+    partial_update=extend_schema(tags=["Users"], summary="Partially update a user"),
+)
 class UserViewSet(viewsets.ModelViewSet):
-    """
-    /api/v1/users/users/
-    - Admin: barcha foydalanuvchilarni ko'radi va o'zgartiradi.
-    - Oddiy user: faqat o'zini ko'radi.
-    - DELETE o'rniga PATCH is_active=False — hisobni o'chirish emas, o'chirish.
-    """
-
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsSelfOrAdmin]
-    http_method_names = ["get", "patch", "head", "options"]  # DELETE yo'q
+    http_method_names = ["get", "patch", "head", "options"]
 
     def get_queryset(self):
         user = self.request.user
@@ -38,12 +36,13 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all().order_by("-date_joined")
         return User.objects.filter(pk=user.pk)
 
+    @extend_schema(tags=["Users"], summary="Get current user profile")
     @action(detail=False, methods=["get"], url_path="me")
     def me(self, request):
-        """GET /api/v1/users/users/me/ — joriy foydalanuvchi profili."""
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
+    @extend_schema(tags=["Users"], summary="Change password")
     @action(
         detail=False,
         methods=["post"],
@@ -51,7 +50,6 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.IsAuthenticated],
     )
     def change_password(self, request):
-        """POST /api/v1/users/users/change-password/"""
         serializer = ChangePasswordSerializer(
             data=request.data, context={"request": request}
         )
@@ -63,13 +61,15 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Users"], summary="List business profiles"),
+    retrieve=extend_schema(tags=["Users"], summary="Retrieve a business profile"),
+    create=extend_schema(tags=["Users"], summary="Create a business profile"),
+    update=extend_schema(tags=["Users"], summary="Update a business profile"),
+    partial_update=extend_schema(tags=["Users"], summary="Partially update a business profile"),
+    destroy=extend_schema(tags=["Users"], summary="Delete a business profile"),
+)
 class BusinessProfileViewSet(viewsets.ModelViewSet):
-    """
-    /api/v1/users/business-profiles/
-    - Business user: faqat o'z profilini ko'radi/yaratadi/o'zgartiradi.
-    - Admin: barchasini ko'radi.
-    """
-
     serializer_class = BusinessProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 
@@ -88,13 +88,15 @@ class BusinessProfileViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Users"], summary="List courier profiles"),
+    retrieve=extend_schema(tags=["Users"], summary="Retrieve a courier profile"),
+    create=extend_schema(tags=["Users"], summary="Create a courier profile"),
+    update=extend_schema(tags=["Users"], summary="Update a courier profile"),
+    partial_update=extend_schema(tags=["Users"], summary="Partially update a courier profile"),
+    destroy=extend_schema(tags=["Users"], summary="Delete a courier profile"),
+)
 class CourierProfileViewSet(viewsets.ModelViewSet):
-    """
-    /api/v1/users/courier-profiles/
-    - Kuryer user: faqat o'z profilini ko'radi/yaratadi/o'zgartiradi.
-    - Admin: barchasini ko'radi.
-    """
-
     serializer_class = CourierProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
 

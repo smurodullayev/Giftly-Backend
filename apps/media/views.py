@@ -1,4 +1,5 @@
 from django.contrib.contenttypes.models import ContentType
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status
 from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
@@ -8,27 +9,8 @@ from .permissions import IsUploaderOrAdmin
 from .serializers import MediaFileSerializer, MediaUpdateSerializer, MediaUploadSerializer
 
 
+@extend_schema(tags=["Media"], summary="Upload a file")
 class MediaUploadView(generics.CreateAPIView):
-    """
-    POST /api/v1/media/upload/
-    multipart/form-data formatida fayl yuklash.
-
-    Misol (product rasmi):
-      file=<rasm>
-      purpose=product_image
-      content_type_id=<Product ContentType ID>
-      object_id=<product.pk>
-      is_primary=true
-      alt_text=Gul guldasta
-
-    Avatar yuklash:
-      file=<rasm>
-      purpose=user_avatar
-      content_type_id=<User ContentType ID>
-      object_id=<user.pk>
-      is_primary=true
-    """
-
     serializer_class = MediaUploadSerializer
     permission_classes = [permissions.IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
@@ -43,13 +25,8 @@ class MediaUploadView(generics.CreateAPIView):
         )
 
 
+@extend_schema(tags=["Media"])
 class MediaDetailView(generics.RetrieveUpdateDestroyAPIView):
-    """
-    GET    /api/v1/media/<id>/  — fayl ma'lumotlari
-    PATCH  /api/v1/media/<id>/  — alt_text, is_primary, order yangilash
-    DELETE /api/v1/media/<id>/  — faylni o'chirish (faylni diskdan ham o'chiradi)
-    """
-
     permission_classes = [permissions.IsAuthenticated, IsUploaderOrAdmin]
 
     def get_queryset(self):
@@ -60,21 +37,26 @@ class MediaDetailView(generics.RetrieveUpdateDestroyAPIView):
             return MediaUpdateSerializer
         return MediaFileSerializer
 
+    @extend_schema(summary="Retrieve a media file")
+    def get(self, request, *args, **kwargs):
+        return super().get(request, *args, **kwargs)
+
+    @extend_schema(summary="Update a media file")
+    def patch(self, request, *args, **kwargs):
+        return super().patch(request, *args, **kwargs)
+
+    @extend_schema(summary="Delete a media file")
+    def delete(self, request, *args, **kwargs):
+        return super().delete(request, *args, **kwargs)
+
     def perform_destroy(self, instance):
-        # Faylni diskdan o'chirish
         if instance.file:
             instance.file.delete(save=False)
         instance.delete()
 
 
+@extend_schema(tags=["Media"], summary="List media files for an object")
 class ObjectMediaListView(generics.ListAPIView):
-    """
-    GET /api/v1/media/for/<content_type_id>/<object_id>/
-    Berilgan obyektning barcha media fayllarini ro'yxatlash.
-
-    Misol: /api/v1/media/for/12/5/  → Product #5 ning barcha rasmlari
-    """
-
     serializer_class = MediaFileSerializer
     permission_classes = [permissions.IsAuthenticated]
 
@@ -88,14 +70,8 @@ class ObjectMediaListView(generics.ListAPIView):
         )
 
 
+@extend_schema(tags=["Media"], summary="List available content types for upload")
 class ContentTypeListView(generics.GenericAPIView):
-    """
-    GET /api/v1/media/content-types/
-    Frontend uchun content_type_id larini qaytaradi.
-
-    Faqat media yuklash uchun kerakli modellar ko'rsatiladi.
-    """
-
     permission_classes = [permissions.IsAuthenticated]
 
     ALLOWED_MODELS = {

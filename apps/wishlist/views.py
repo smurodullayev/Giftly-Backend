@@ -1,3 +1,4 @@
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -6,18 +7,12 @@ from .models import WishlistItem
 from .serializers import WishlistItemSerializer
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Wishlist"], summary="List wishlist items"),
+    create=extend_schema(tags=["Wishlist"], summary="Add product to wishlist"),
+    destroy=extend_schema(tags=["Wishlist"], summary="Remove wishlist item by ID"),
+)
 class WishlistViewSet(viewsets.ModelViewSet):
-    """
-    /api/v1/wishlist/
-
-    GET    /wishlist/                    → foydalanuvchining wishlist i
-    POST   /wishlist/                    → mahsulot qo'shish  {product: <id>}
-    DELETE /wishlist/{id}/               → elementni o'chirish
-
-    GET    /wishlist/check/?product=<id> → mahsulot wishlistda bormi
-    DELETE /wishlist/remove/?product=<id>→ product ID bo'yicha o'chirish
-    """
-
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = WishlistItemSerializer
     http_method_names = ["get", "post", "delete", "head", "options"]
@@ -30,12 +25,9 @@ class WishlistViewSet(viewsets.ModelViewSet):
             .order_by("-created_at")
         )
 
+    @extend_schema(tags=["Wishlist"], summary="Check if product is in wishlist")
     @action(detail=False, methods=["get"], url_path="check")
     def check(self, request):
-        """
-        GET /api/v1/wishlist/check/?product=<id>
-        Mahsulot wishlistda bormi yo'qmi.
-        """
         product_id = request.query_params.get("product")
         if not product_id:
             return Response(
@@ -47,12 +39,9 @@ class WishlistViewSet(viewsets.ModelViewSet):
         ).exists()
         return Response({"product": product_id, "in_wishlist": exists})
 
+    @extend_schema(tags=["Wishlist"], summary="Remove product from wishlist by product ID")
     @action(detail=False, methods=["delete"], url_path="remove")
     def remove_by_product(self, request):
-        """
-        DELETE /api/v1/wishlist/remove/?product=<id>
-        Product ID bo'yicha wishlistdan o'chirish.
-        """
         product_id = request.query_params.get("product")
         if not product_id:
             return Response(

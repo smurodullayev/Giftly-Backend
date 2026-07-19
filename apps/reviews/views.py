@@ -1,5 +1,6 @@
 from django.db.models import Avg, Count
 from django.utils import timezone
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -15,23 +16,15 @@ from .serializers import (
 )
 
 
+@extend_schema_view(
+    list=extend_schema(tags=["Reviews"], summary="List reviews"),
+    retrieve=extend_schema(tags=["Reviews"], summary="Retrieve a review"),
+    create=extend_schema(tags=["Reviews"], summary="Create a review"),
+    update=extend_schema(tags=["Reviews"], summary="Update a review"),
+    partial_update=extend_schema(tags=["Reviews"], summary="Partially update a review"),
+    destroy=extend_schema(tags=["Reviews"], summary="Delete a review"),
+)
 class ReviewViewSet(viewsets.ModelViewSet):
-    """
-    /api/v1/reviews/
-
-    Filtrlar:
-      ?product=1         — mahsulot bo'yicha
-      ?rating=5          — reyting bo'yicha
-      ?verified=true     — faqat tasdiqlangan xaridlar
-      ?ordering=-rating  — reyting bo'yicha
-      ?ordering=-created_at — yangiligi bo'yicha (standart)
-
-    Qo'shimcha endpointlar:
-      POST   /reviews/{id}/reply/    → biznes javobi (faqat mahsulot egasi)
-      DELETE /reviews/{id}/reply/    → javobni o'chirish (faqat mahsulot egasi)
-      GET    /reviews/summary/       → ?product=<id> bo'yicha reyting xulosasi
-    """
-
     search_fields = ["comment", "user__username"]
     ordering_fields = ["rating", "created_at"]
     ordering = ["-created_at"]
@@ -68,48 +61,29 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return BusinessReplySerializer
         return ReviewWriteSerializer
 
-    # ------------------------------------------------------------------
-    # Biznes javobi
-    # ------------------------------------------------------------------
-
+    @extend_schema(tags=["Reviews"], summary="Add business reply to a review")
     @action(detail=True, methods=["post"], url_path="reply")
     def reply(self, request, pk=None):
-        """
-        POST /api/v1/reviews/{id}/reply/
-        Biznes egasi sharhga javob qoldiradi.
-        """
         review = self.get_object()
-        serializer = BusinessReplySerializer(
-            review, data=request.data, partial=True
-        )
+        serializer = BusinessReplySerializer(review, data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
         review.reply = serializer.validated_data["reply"]
         review.replied_at = timezone.now()
         review.save(update_fields=["reply", "replied_at"])
         return Response(ReviewReadSerializer(review, context={"request": request}).data)
 
+    @extend_schema(tags=["Reviews"], summary="Delete business reply from a review")
     @action(detail=True, methods=["delete"], url_path="reply")
     def delete_reply(self, request, pk=None):
-        """
-        DELETE /api/v1/reviews/{id}/reply/
-        Biznes egasi o'z javobini o'chiradi.
-        """
         review = self.get_object()
         review.reply = ""
         review.replied_at = None
         review.save(update_fields=["reply", "replied_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # ------------------------------------------------------------------
-    # Reyting xulosasi
-    # ------------------------------------------------------------------
-
+    @extend_schema(tags=["Reviews"], summary="Get rating summary for a product")
     @action(detail=False, methods=["get"], url_path="summary")
     def summary(self, request):
-        """
-        GET /api/v1/reviews/summary/?product=<id>
-        Mahsulot reytingi xulosasi: o'rtacha, soni, 1-5 taqsimot.
-        """
         product_id = request.query_params.get("product")
         if not product_id:
             return Response(
@@ -120,7 +94,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         qs = Review.objects.filter(product_id=product_id)
         agg = qs.aggregate(avg_rating=Avg("rating"), review_count=Count("id"))
 
-        # 1★ dan 5★ gacha soni
         breakdown = {}
         for star in range(1, 6):
             breakdown[str(star)] = qs.filter(rating=star).count()
