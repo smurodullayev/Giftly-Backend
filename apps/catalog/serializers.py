@@ -17,10 +17,10 @@ class CategoryChildSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug", "icon_url"]
 
     def get_icon_url(self, obj) -> str | None:
+        if not obj.icon:
+            return None
         request = self.context.get("request")
-        if obj.icon and request:
-            return request.build_absolute_uri(obj.icon.url)
-        return None
+        return request.build_absolute_uri(obj.icon.url) if request else obj.icon.url
 
 
 class CategorySubSerializer(serializers.ModelSerializer):
@@ -34,10 +34,10 @@ class CategorySubSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug", "icon_url", "children"]
 
     def get_icon_url(self, obj) -> str | None:
+        if not obj.icon:
+            return None
         request = self.context.get("request")
-        if obj.icon and request:
-            return request.build_absolute_uri(obj.icon.url)
-        return None
+        return request.build_absolute_uri(obj.icon.url) if request else obj.icon.url
 
 
 class CategoryTreeSerializer(serializers.ModelSerializer):
@@ -55,10 +55,10 @@ class CategoryTreeSerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug", "icon_url", "level", "children"]
 
     def get_icon_url(self, obj) -> str | None:
+        if not obj.icon:
+            return None
         request = self.context.get("request")
-        if obj.icon and request:
-            return request.build_absolute_uri(obj.icon.url)
-        return None
+        return request.build_absolute_uri(obj.icon.url) if request else obj.icon.url
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -76,10 +76,10 @@ class CategorySerializer(serializers.ModelSerializer):
         read_only_fields = ["slug"]
 
     def get_icon_url(self, obj) -> str | None:
+        if not obj.icon:
+            return None
         request = self.context.get("request")
-        if obj.icon and request:
-            return request.build_absolute_uri(obj.icon.url)
-        return None
+        return request.build_absolute_uri(obj.icon.url) if request else obj.icon.url
 
 
 # ------------------------------------------------------------------
