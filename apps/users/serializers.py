@@ -1,3 +1,5 @@
+from typing import Optional
+
 from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 
@@ -23,7 +25,7 @@ class UserSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ["id", "is_verified", "date_joined", "updated_at", "avatar_url"]
 
-    def get_avatar_url(self, obj) -> str | None:
+    def get_avatar_url(self, obj) -> Optional[str]:
         """Foydalanuvchining asosiy avatarini MediaFile dan olish."""
         from django.contrib.contenttypes.models import ContentType
         from apps.media.models import MediaFile
@@ -130,13 +132,13 @@ class BusinessProfileSerializer(serializers.ModelSerializer):
             "logotype": {"write_only": True, "required": False},
         }
 
-    def get_logo_url(self, obj) -> str | None:
+    def get_logo_url(self, obj) -> Optional[str]:
         if not obj.logo:
             return None
         request = self.context.get("request")
         return request.build_absolute_uri(obj.logo.url) if request else obj.logo.url
 
-    def get_logotype_url(self, obj) -> str | None:
+    def get_logotype_url(self, obj) -> Optional[str]:
         if not obj.logotype:
             return None
         request = self.context.get("request")

@@ -1,3 +1,5 @@
+from typing import Optional
+
 from rest_framework import serializers
 
 from .models import Category, Occasion, Product, Tag
@@ -16,7 +18,7 @@ class CategoryChildSerializer(serializers.ModelSerializer):
         model = Category
         fields = ["id", "name", "slug", "icon_url"]
 
-    def get_icon_url(self, obj) -> str | None:
+    def get_icon_url(self, obj) -> Optional[str]:
         if not obj.icon:
             return None
         request = self.context.get("request")
@@ -33,7 +35,7 @@ class CategorySubSerializer(serializers.ModelSerializer):
         model = Category
         fields = ["id", "name", "slug", "icon_url", "children"]
 
-    def get_icon_url(self, obj) -> str | None:
+    def get_icon_url(self, obj) -> Optional[str]:
         if not obj.icon:
             return None
         request = self.context.get("request")
@@ -54,7 +56,7 @@ class CategoryTreeSerializer(serializers.ModelSerializer):
         model = Category
         fields = ["id", "name", "slug", "icon_url", "level", "children"]
 
-    def get_icon_url(self, obj) -> str | None:
+    def get_icon_url(self, obj) -> Optional[str]:
         if not obj.icon:
             return None
         request = self.context.get("request")
@@ -75,7 +77,7 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name", "slug", "parent", "parent_name", "icon_url"]
         read_only_fields = ["slug"]
 
-    def get_icon_url(self, obj) -> str | None:
+    def get_icon_url(self, obj) -> Optional[str]:
         if not obj.icon:
             return None
         request = self.context.get("request")
