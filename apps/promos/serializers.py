@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Optional
 
 from rest_framework import serializers
 
@@ -31,7 +32,7 @@ class CouponSerializer(serializers.ModelSerializer):
             return timezone.now() > obj.valid_until
         return False
 
-    def get_remaining_uses(self, obj) -> int | None:
+    def get_remaining_uses(self, obj) -> Optional[int]:
         if obj.max_uses is None:
             return None
         return max(0, obj.max_uses - obj.used_count)

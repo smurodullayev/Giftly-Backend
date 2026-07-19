@@ -4,11 +4,12 @@ Model va View dan alohida — qayta ishlatish uchun.
 """
 
 from decimal import Decimal
+from typing import Optional
 
 from .models import DeliveryZone
 
 
-def find_zone(destination_address: str) -> DeliveryZone | None:
+def find_zone(destination_address: str) -> Optional[DeliveryZone]:
     """
     Manzilga mos zonani topadi.
     Kalit so'zlar katta/kichik harfga sezgir emas.
