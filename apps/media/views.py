@@ -9,7 +9,7 @@ from .permissions import IsUploaderOrAdmin
 from .serializers import MediaFileSerializer, MediaUpdateSerializer, MediaUploadSerializer
 
 
-@extend_schema(tags=["Media"], summary="Upload a file")
+@extend_schema(tags=["Media"])
 class MediaUploadView(generics.CreateAPIView):
     serializer_class = MediaUploadSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -37,25 +37,13 @@ class MediaDetailView(generics.RetrieveUpdateDestroyAPIView):
             return MediaUpdateSerializer
         return MediaFileSerializer
 
-    @extend_schema(summary="Retrieve a media file")
-    def get(self, request, *args, **kwargs):
-        return super().get(request, *args, **kwargs)
-
-    @extend_schema(summary="Update a media file")
-    def patch(self, request, *args, **kwargs):
-        return super().patch(request, *args, **kwargs)
-
-    @extend_schema(summary="Delete a media file")
-    def delete(self, request, *args, **kwargs):
-        return super().delete(request, *args, **kwargs)
-
     def perform_destroy(self, instance):
         if instance.file:
             instance.file.delete(save=False)
         instance.delete()
 
 
-@extend_schema(tags=["Media"], summary="List media files for an object")
+@extend_schema(tags=["Media"])
 class ObjectMediaListView(generics.ListAPIView):
     serializer_class = MediaFileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -70,7 +58,7 @@ class ObjectMediaListView(generics.ListAPIView):
         )
 
 
-@extend_schema(tags=["Media"], summary="List available content types for upload")
+@extend_schema(tags=["Media"])
 class ContentTypeListView(generics.GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -85,11 +73,7 @@ class ContentTypeListView(generics.GenericAPIView):
         for app_label, model in self.ALLOWED_MODELS:
             try:
                 ct = ContentType.objects.get(app_label=app_label, model=model)
-                result.append({
-                    "id": ct.pk,
-                    "app_label": app_label,
-                    "model": model,
-                })
+                result.append({"id": ct.pk, "app_label": app_label, "model": model})
             except ContentType.DoesNotExist:
                 pass
         return Response(sorted(result, key=lambda x: x["model"]))

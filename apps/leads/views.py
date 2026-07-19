@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,14 +8,7 @@ from .permissions import IsLeadOwnerOrProductBusiness, IsOrderParticipantOrAdmin
 from .serializers import LeadSerializer, LeadStatusSerializer, OrderSerializer
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Leads"], summary="List leads"),
-    retrieve=extend_schema(tags=["Leads"], summary="Retrieve a lead"),
-    create=extend_schema(tags=["Leads"], summary="Create a lead"),
-    update=extend_schema(tags=["Leads"], summary="Update a lead"),
-    partial_update=extend_schema(tags=["Leads"], summary="Partially update a lead"),
-    destroy=extend_schema(tags=["Leads"], summary="Delete a lead"),
-)
+@extend_schema(tags=["Leads"])
 class LeadViewSet(viewsets.ModelViewSet):
     serializer_class = LeadSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -36,7 +29,6 @@ class LeadViewSet(viewsets.ModelViewSet):
             return [permissions.IsAuthenticated(), IsLeadOwnerOrProductBusiness()]
         return [permissions.IsAuthenticated()]
 
-    @extend_schema(tags=["Leads"], summary="Update lead status")
     @action(
         detail=True,
         methods=["patch"],
@@ -56,14 +48,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         return Response(LeadSerializer(lead).data)
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Orders"], summary="List orders"),
-    retrieve=extend_schema(tags=["Orders"], summary="Retrieve an order"),
-    create=extend_schema(tags=["Orders"], summary="Create an order"),
-    update=extend_schema(tags=["Orders"], summary="Update an order"),
-    partial_update=extend_schema(tags=["Orders"], summary="Partially update an order"),
-    destroy=extend_schema(tags=["Orders"], summary="Delete an order"),
-)
+@extend_schema(tags=["Orders"])
 class OrderViewSet(viewsets.ModelViewSet):
     serializer_class = OrderSerializer
     permission_classes = [permissions.IsAuthenticated]

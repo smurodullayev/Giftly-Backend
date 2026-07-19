@@ -1,6 +1,6 @@
 from django.db.models import Avg, Count
 from django.utils import timezone
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -16,14 +16,7 @@ from .serializers import (
 )
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Reviews"], summary="List reviews"),
-    retrieve=extend_schema(tags=["Reviews"], summary="Retrieve a review"),
-    create=extend_schema(tags=["Reviews"], summary="Create a review"),
-    update=extend_schema(tags=["Reviews"], summary="Update a review"),
-    partial_update=extend_schema(tags=["Reviews"], summary="Partially update a review"),
-    destroy=extend_schema(tags=["Reviews"], summary="Delete a review"),
-)
+@extend_schema(tags=["Reviews"])
 class ReviewViewSet(viewsets.ModelViewSet):
     search_fields = ["comment", "user__username"]
     ordering_fields = ["rating", "created_at"]
@@ -61,7 +54,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
             return BusinessReplySerializer
         return ReviewWriteSerializer
 
-    @extend_schema(tags=["Reviews"], summary="Add business reply to a review")
     @action(detail=True, methods=["post"], url_path="reply")
     def reply(self, request, pk=None):
         review = self.get_object()
@@ -72,7 +64,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review.save(update_fields=["reply", "replied_at"])
         return Response(ReviewReadSerializer(review, context={"request": request}).data)
 
-    @extend_schema(tags=["Reviews"], summary="Delete business reply from a review")
     @action(detail=True, methods=["delete"], url_path="reply")
     def delete_reply(self, request, pk=None):
         review = self.get_object()
@@ -81,7 +72,6 @@ class ReviewViewSet(viewsets.ModelViewSet):
         review.save(update_fields=["reply", "replied_at"])
         return Response(status=status.HTTP_204_NO_CONTENT)
 
-    @extend_schema(tags=["Reviews"], summary="Get rating summary for a product")
     @action(detail=False, methods=["get"], url_path="summary")
     def summary(self, request):
         product_id = request.query_params.get("product")
@@ -90,22 +80,14 @@ class ReviewViewSet(viewsets.ModelViewSet):
                 {"detail": "?product=<id> parametri majburiy."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-
         qs = Review.objects.filter(product_id=product_id)
         agg = qs.aggregate(avg_rating=Avg("rating"), review_count=Count("id"))
-
-        breakdown = {}
-        for star in range(1, 6):
-            breakdown[str(star)] = qs.filter(rating=star).count()
-
-        verified_count = qs.filter(is_verified_purchase=True).count()
-
+        breakdown = {str(star): qs.filter(rating=star).count() for star in range(1, 6)}
         data = {
             "product_id": int(product_id),
             "avg_rating": round(agg["avg_rating"] or 0, 2),
             "review_count": agg["review_count"],
             "rating_breakdown": breakdown,
-            "verified_count": verified_count,
+            "verified_count": qs.filter(is_verified_purchase=True).count(),
         }
-        serializer = ProductRatingSummarySerializer(data)
-        return Response(serializer.data)
+        return Response(ProductRatingSummarySerializer(data).data)

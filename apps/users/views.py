@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -14,17 +14,13 @@ from .serializers import (
 )
 
 
-@extend_schema(tags=["Users"], summary="Register a new user")
+@extend_schema(tags=["Users"])
 class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
     permission_classes = [permissions.AllowAny]
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Users"], summary="List users"),
-    retrieve=extend_schema(tags=["Users"], summary="Retrieve a user"),
-    partial_update=extend_schema(tags=["Users"], summary="Partially update a user"),
-)
+@extend_schema(tags=["Users"])
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated, IsSelfOrAdmin]
@@ -36,13 +32,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all().order_by("-date_joined")
         return User.objects.filter(pk=user.pk)
 
-    @extend_schema(tags=["Users"], summary="Get current user profile")
     @action(detail=False, methods=["get"], url_path="me")
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data)
 
-    @extend_schema(tags=["Users"], summary="Change password")
     @action(
         detail=False,
         methods=["post"],
@@ -61,14 +55,7 @@ class UserViewSet(viewsets.ModelViewSet):
         )
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Users"], summary="List business profiles"),
-    retrieve=extend_schema(tags=["Users"], summary="Retrieve a business profile"),
-    create=extend_schema(tags=["Users"], summary="Create a business profile"),
-    update=extend_schema(tags=["Users"], summary="Update a business profile"),
-    partial_update=extend_schema(tags=["Users"], summary="Partially update a business profile"),
-    destroy=extend_schema(tags=["Users"], summary="Delete a business profile"),
-)
+@extend_schema(tags=["Users"])
 class BusinessProfileViewSet(viewsets.ModelViewSet):
     serializer_class = BusinessProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
@@ -88,14 +75,7 @@ class BusinessProfileViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Users"], summary="List courier profiles"),
-    retrieve=extend_schema(tags=["Users"], summary="Retrieve a courier profile"),
-    create=extend_schema(tags=["Users"], summary="Create a courier profile"),
-    update=extend_schema(tags=["Users"], summary="Update a courier profile"),
-    partial_update=extend_schema(tags=["Users"], summary="Partially update a courier profile"),
-    destroy=extend_schema(tags=["Users"], summary="Delete a courier profile"),
-)
+@extend_schema(tags=["Users"])
 class CourierProfileViewSet(viewsets.ModelViewSet):
     serializer_class = CourierProfileSerializer
     permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]

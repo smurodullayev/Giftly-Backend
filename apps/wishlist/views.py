@@ -1,4 +1,4 @@
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -7,11 +7,7 @@ from .models import WishlistItem
 from .serializers import WishlistItemSerializer
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Wishlist"], summary="List wishlist items"),
-    create=extend_schema(tags=["Wishlist"], summary="Add product to wishlist"),
-    destroy=extend_schema(tags=["Wishlist"], summary="Remove wishlist item by ID"),
-)
+@extend_schema(tags=["Wishlist"])
 class WishlistViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     serializer_class = WishlistItemSerializer
@@ -25,7 +21,6 @@ class WishlistViewSet(viewsets.ModelViewSet):
             .order_by("-created_at")
         )
 
-    @extend_schema(tags=["Wishlist"], summary="Check if product is in wishlist")
     @action(detail=False, methods=["get"], url_path="check")
     def check(self, request):
         product_id = request.query_params.get("product")
@@ -39,7 +34,6 @@ class WishlistViewSet(viewsets.ModelViewSet):
         ).exists()
         return Response({"product": product_id, "in_wishlist": exists})
 
-    @extend_schema(tags=["Wishlist"], summary="Remove product from wishlist by product ID")
     @action(detail=False, methods=["delete"], url_path="remove")
     def remove_by_product(self, request):
         product_id = request.query_params.get("product")

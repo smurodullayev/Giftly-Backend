@@ -1,5 +1,5 @@
 from django.db.models import Avg, Count
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,14 +17,7 @@ from .serializers import (
 )
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Catalog"], summary="List categories"),
-    retrieve=extend_schema(tags=["Catalog"], summary="Retrieve a category"),
-    create=extend_schema(tags=["Catalog"], summary="Create a category"),
-    update=extend_schema(tags=["Catalog"], summary="Update a category"),
-    partial_update=extend_schema(tags=["Catalog"], summary="Partially update a category"),
-    destroy=extend_schema(tags=["Catalog"], summary="Delete a category"),
-)
+@extend_schema(tags=["Catalog"])
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.select_related("parent").prefetch_related(
         "children", "children__children"
@@ -35,7 +28,6 @@ class CategoryViewSet(viewsets.ModelViewSet):
     ordering_fields = ["name"]
     ordering = ["name"]
 
-    @extend_schema(tags=["Catalog"], summary="Get full category tree")
     @action(detail=False, methods=["get"], url_path="tree")
     def tree(self, request):
         roots = (
@@ -50,14 +42,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Catalog"], summary="List occasions"),
-    retrieve=extend_schema(tags=["Catalog"], summary="Retrieve an occasion"),
-    create=extend_schema(tags=["Catalog"], summary="Create an occasion"),
-    update=extend_schema(tags=["Catalog"], summary="Update an occasion"),
-    partial_update=extend_schema(tags=["Catalog"], summary="Partially update an occasion"),
-    destroy=extend_schema(tags=["Catalog"], summary="Delete an occasion"),
-)
+@extend_schema(tags=["Catalog"])
 class OccasionViewSet(viewsets.ModelViewSet):
     queryset = Occasion.objects.all()
     serializer_class = OccasionSerializer
@@ -67,14 +52,7 @@ class OccasionViewSet(viewsets.ModelViewSet):
     ordering = ["name"]
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Catalog"], summary="List tags"),
-    retrieve=extend_schema(tags=["Catalog"], summary="Retrieve a tag"),
-    create=extend_schema(tags=["Catalog"], summary="Create a tag"),
-    update=extend_schema(tags=["Catalog"], summary="Update a tag"),
-    partial_update=extend_schema(tags=["Catalog"], summary="Partially update a tag"),
-    destroy=extend_schema(tags=["Catalog"], summary="Delete a tag"),
-)
+@extend_schema(tags=["Catalog"])
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -84,14 +62,7 @@ class TagViewSet(viewsets.ModelViewSet):
     ordering = ["name"]
 
 
-@extend_schema_view(
-    list=extend_schema(tags=["Catalog"], summary="List products"),
-    retrieve=extend_schema(tags=["Catalog"], summary="Retrieve a product"),
-    create=extend_schema(tags=["Catalog"], summary="Create a product"),
-    update=extend_schema(tags=["Catalog"], summary="Update a product"),
-    partial_update=extend_schema(tags=["Catalog"], summary="Partially update a product"),
-    destroy=extend_schema(tags=["Catalog"], summary="Delete a product"),
-)
+@extend_schema(tags=["Catalog"])
 class ProductViewSet(viewsets.ModelViewSet):
     permission_classes = [IsBusinessOwnerOrReadOnly]
     filterset_class = ProductFilter
