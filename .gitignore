@@ -5,3 +5,4 @@ venv/
 staticfiles/
 *.sqlite3
 .idea/
+mediafiles

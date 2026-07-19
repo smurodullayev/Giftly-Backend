@@ -74,7 +74,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_editable = ("is_active", "stock")
     raw_id_fields = ("business",)
     filter_horizontal = ("categories", "occasions", "tags")
-    prepopulated_fields = {"slug": ("title",)}
+    # prepopulated_fields = {"slug": ("title",)}
     readonly_fields = ("slug", "created_at", "updated_at")
     ordering = ("-created_at",)
     fieldsets = (
