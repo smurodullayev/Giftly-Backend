@@ -158,3 +158,32 @@ class CourierProfile(models.Model):
 
     def __str__(self) -> str:
         return f"Kuryer: {self.user.username}"
+
+class BusinessLocation(models.Model):
+    business_profile = models.ForeignKey(
+        BusinessProfile,
+        on_delete=models.CASCADE,
+        related_name="locations",
+        verbose_name="Biznes profili",
+    )
+    location = models.ForeignKey(
+        'locations.Address',
+        on_delete=models.CASCADE,
+        related_name="business_locations",
+        verbose_name="Manzil",
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name="Manzil nomi",
+        help_text="Masalan: Bosh ofis, Do'kon, Omborxona",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Biznes manzili"
+        verbose_name_plural = "Biznes manzillari"
+
+    def __str__(self):
+        return f"{self.name} - {self.business_profile.company_name}"
+
