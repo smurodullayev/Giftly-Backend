@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.utils.html import format_html
 
-from .models import BusinessProfile, CourierProfile, User
+from .models import BusinessProfile, CourierProfile, User, BusinessLocation, UserLocation
 
 
 @admin.register(User)
@@ -17,7 +17,7 @@ class CustomUserAdmin(UserAdmin):
     fieldsets = UserAdmin.fieldsets + (
         ("Giftly", {
             "fields": (
-                "role", "phone", "birth_date", "address",
+                "role", "phone", "birth_date",
                 "telegram", "bio", "is_verified",
             ),
         }),
@@ -119,3 +119,16 @@ class CourierProfileAdmin(admin.ModelAdmin):
     search_fields = ("user__username",)
     raw_id_fields = ("user",)
     readonly_fields = ("updated_at",)
+
+
+@admin.register(BusinessLocation)
+class BusinessLocationAdmin(admin.ModelAdmin):
+    list_display = ("business_profile", "location", "name", "created_at")
+
+@admin.register(UserLocation)
+class UserLocation(admin.ModelAdmin):
+    list_display = ("user", "location", "name", "created_at")
+    list_filter = ("user__role",)
+    search_fields = ("user__username", "name")
+    raw_id_fields = ("user", "location")
+    readonly_fields = ("created_at",)

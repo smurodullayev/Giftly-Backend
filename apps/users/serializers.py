@@ -19,7 +19,7 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "username", "email", "first_name", "last_name",
-            "role", "phone", "birth_date", "address", "telegram",
+            "role", "phone", "birth_date", "telegram",
             "bio", "is_verified", "avatar_url",
             "date_joined", "updated_at",
         ]
@@ -54,7 +54,7 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "username", "email", "first_name", "last_name",
-            "role", "phone", "birth_date", "address", "telegram",
+            "role", "phone", "birth_date", "telegram",
             "password", "password_confirm",
         ]
 

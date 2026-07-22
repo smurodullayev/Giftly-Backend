@@ -186,3 +186,31 @@ class BusinessLocation(models.Model):
     def __str__(self):
         return f"{self.name} - {self.business_profile.company_name}"
 
+
+class UserLocation(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="locations",
+        verbose_name="Foydalanuvchi",
+    )
+    location = models.ForeignKey(
+        'locations.Address',
+        on_delete=models.CASCADE,
+        related_name="user_locations",
+        verbose_name="Manzil",
+    )
+    name = models.CharField(
+        max_length=255,
+        verbose_name="Manzil nomi",
+        help_text="Masalan: Uy, Ish, Do'stlar uyi",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Foydalanuvchi manzili"
+        verbose_name_plural = "Foydalanuvchi manzillari"
+
+    def __str__(self):
+        return f"{self.name} - {self.user.username}"
