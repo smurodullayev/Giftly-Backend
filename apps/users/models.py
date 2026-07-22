@@ -86,7 +86,6 @@ class BusinessProfile(models.Model):
         verbose_name="Biznes telefon",
         help_text="Kompaniya bog'lanish raqami",
     )
-    address = models.CharField(max_length=500, blank=True, verbose_name="Manzil")
     website = models.URLField(blank=True, verbose_name="Veb-sayt")
     instagram_url = models.URLField(blank=True, verbose_name="Instagram URL")
     telegram_username = models.CharField(

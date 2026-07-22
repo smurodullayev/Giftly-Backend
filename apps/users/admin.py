@@ -54,7 +54,7 @@ class BusinessProfileAdmin(admin.ModelAdmin):
             ),
         }),
         ("Aloqa", {
-            "fields": ("phone", "address", "website", "instagram_url", "telegram_username"),
+            "fields": ("phone", "website", "instagram_url", "telegram_username"),
         }),
         ("Holat", {
             "fields": ("subscription_plan", "is_verified"),

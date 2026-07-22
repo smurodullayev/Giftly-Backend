@@ -114,7 +114,7 @@ class BusinessProfileSerializer(serializers.ModelSerializer):
         fields = [
             "id", "user",
             "company_name", "description",
-            "phone", "address", "website", "instagram_url", "telegram_username",
+            "phone", "website", "instagram_url", "telegram_username",
             # Rasmlar: yuklanadigan field + o'qiladigan URL
             "logo", "logo_url",
             "logotype", "logotype_url",
